@@ -11,7 +11,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Create release directory and move files
       run: |
@@ -22,14 +22,22 @@ jobs:
         zip -r ../release.zip .
         cd ..
 
+    - name: Get current commit hash
+      id: vars
+      run: echo "::set-output name=sha::$(git rev-parse --short HEAD)"
+
+    - name: Create a unique tag name
+      id: tag_name
+      run: echo "::set-output name=tag::release-$(date +%Y%m%d%H%M%S)-${{ steps.vars.outputs.sha }}"
+
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ github.ref }}
-        release_name: ${{ github.ref }}
+        tag_name: ${{ steps.tag_name.outputs.tag }}
+        release_name: ${{ steps.tag_name.outputs.tag }}
         draft: false
         prerelease: false
 
